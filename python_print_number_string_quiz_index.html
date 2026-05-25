@@ -1,0 +1,1177 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Python的Print相關內容</title>
+  <style>
+    :root {
+      --grass-green: #3fb950;
+      --dirt-brown: #7c4a2d;
+      --diamond-blue: #38bdf8;
+      --torch-yellow: #facc15;
+      --wool-white: #f8fafc;
+      --obsidian: #111827;
+      --redstone: #ef4444;
+      --emerald: #22c55e;
+      --shadow: rgba(0, 0, 0, 0.28);
+      --panel: rgba(17, 24, 39, 0.88);
+      --panel-2: rgba(30, 41, 59, 0.92);
+      --line: rgba(248, 250, 252, 0.18);
+      --text: #f8fafc;
+      --muted: #cbd5e1;
+      --radius: 22px;
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html,
+    body {
+      margin: 0;
+      min-height: 100%;
+      font-family: "Microsoft JhengHei", "PingFang TC", "Noto Sans TC", system-ui, sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 15% 15%, rgba(56, 189, 248, 0.35), transparent 32%),
+        radial-gradient(circle at 90% 10%, rgba(250, 204, 21, 0.26), transparent 28%),
+        radial-gradient(circle at 50% 90%, rgba(63, 185, 80, 0.24), transparent 34%),
+        linear-gradient(135deg, #0f172a 0%, #172033 48%, #0b1120 100%);
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      opacity: 0.22;
+      background-image:
+        linear-gradient(rgba(255,255,255,0.07) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.07) 1px, transparent 1px);
+      background-size: 26px 26px;
+      mask-image: radial-gradient(circle at center, black, transparent 85%);
+    }
+
+    .app {
+      width: min(1180px, calc(100% - 28px));
+      margin: 0 auto;
+      padding: 22px 0 32px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .hero {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 18px;
+      align-items: stretch;
+      margin-bottom: 18px;
+    }
+
+    .title-card,
+    .status-card,
+    .quiz-card,
+    .explain-card,
+    .result-card {
+      border: 3px solid rgba(248, 250, 252, 0.16);
+      background: linear-gradient(180deg, var(--panel), rgba(15, 23, 42, 0.92));
+      box-shadow: 0 18px 40px var(--shadow), inset 0 0 0 2px rgba(255,255,255,0.035);
+      border-radius: var(--radius);
+    }
+
+    .title-card {
+      padding: 24px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .title-card::after {
+      content: "print()";
+      position: absolute;
+      right: -10px;
+      bottom: -22px;
+      font-size: clamp(52px, 9vw, 118px);
+      font-weight: 900;
+      letter-spacing: -5px;
+      color: rgba(255,255,255,0.055);
+      pointer-events: none;
+    }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 14px;
+      border-radius: 999px;
+      background: rgba(56, 189, 248, 0.14);
+      color: #bae6fd;
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      font-weight: 800;
+      margin-bottom: 12px;
+    }
+
+    h1 {
+      font-size: clamp(32px, 5.6vw, 64px);
+      line-height: 1.02;
+      margin: 0 0 12px;
+      letter-spacing: -1px;
+      text-shadow: 0 4px 0 rgba(0,0,0,0.25);
+    }
+
+    .subtitle {
+      font-size: clamp(16px, 2.3vw, 22px);
+      line-height: 1.55;
+      margin: 0;
+      color: var(--muted);
+      max-width: 850px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .status-card {
+      width: 260px;
+      padding: 20px;
+      display: grid;
+      gap: 14px;
+      align-content: center;
+    }
+
+    .mini-label {
+      color: var(--muted);
+      font-size: 14px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      font-weight: 800;
+    }
+
+    .big-number {
+      font-size: 42px;
+      font-weight: 950;
+      line-height: 1;
+    }
+
+    .progress-shell {
+      height: 16px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.12);
+      overflow: hidden;
+      border: 1px solid rgba(255,255,255,0.12);
+    }
+
+    .progress-bar {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, var(--grass-green), var(--diamond-blue), var(--torch-yellow));
+      transition: width 0.45s ease;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 1.4fr 0.85fr;
+      gap: 18px;
+      align-items: start;
+    }
+
+    .quiz-card {
+      padding: clamp(18px, 3vw, 30px);
+      min-height: 530px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .quiz-card::before {
+      content: "";
+      position: absolute;
+      inset: auto -70px -80px auto;
+      width: 210px;
+      height: 210px;
+      background: conic-gradient(from 90deg, rgba(56,189,248,0.2), rgba(250,204,21,0.16), rgba(63,185,80,0.18), rgba(56,189,248,0.2));
+      border-radius: 50%;
+      filter: blur(4px);
+    }
+
+    .level-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(250, 204, 21, 0.15);
+      color: #fde68a;
+      border: 1px solid rgba(250, 204, 21, 0.32);
+      padding: 9px 13px;
+      border-radius: 999px;
+      font-size: 15px;
+      font-weight: 900;
+      margin-bottom: 14px;
+    }
+
+    .question {
+      position: relative;
+      z-index: 1;
+      font-size: clamp(24px, 3.7vw, 42px);
+      line-height: 1.26;
+      margin: 0 0 24px;
+      font-weight: 950;
+      letter-spacing: -0.5px;
+    }
+
+    .code-chip {
+      display: inline-block;
+      padding: 0.12em 0.34em;
+      margin: 0 0.08em;
+      border-radius: 10px;
+      background: rgba(15, 23, 42, 0.9);
+      border: 1px solid rgba(148, 163, 184, 0.32);
+      color: #e0f2fe;
+      font-family: Consolas, Monaco, monospace;
+      font-weight: 900;
+      white-space: nowrap;
+    }
+
+    .options {
+      display: grid;
+      gap: 14px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .option-btn {
+      width: 100%;
+      min-height: 76px;
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 14px;
+      align-items: center;
+      text-align: left;
+      cursor: pointer;
+      color: var(--text);
+      background: linear-gradient(180deg, rgba(30, 41, 59, 0.96), rgba(15, 23, 42, 0.96));
+      border: 3px solid rgba(148, 163, 184, 0.22);
+      border-radius: 18px;
+      padding: 14px 18px;
+      font-size: clamp(18px, 2.3vw, 24px);
+      font-weight: 850;
+      box-shadow: 0 10px 0 rgba(0,0,0,0.22);
+      transform: translateY(0);
+      transition: transform 0.16s ease, border-color 0.16s ease, background 0.16s ease, box-shadow 0.16s ease;
+    }
+
+    .option-btn:not(:disabled):hover {
+      transform: translateY(-3px);
+      border-color: rgba(56, 189, 248, 0.55);
+      box-shadow: 0 13px 0 rgba(0,0,0,0.24), 0 0 22px rgba(56,189,248,0.14);
+    }
+
+    .option-btn:disabled {
+      cursor: not-allowed;
+      opacity: 0.95;
+    }
+
+    .choice-letter {
+      width: 42px;
+      height: 42px;
+      border-radius: 14px;
+      display: grid;
+      place-items: center;
+      color: #0f172a;
+      background: var(--wool-white);
+      font-weight: 950;
+      box-shadow: inset 0 -4px 0 rgba(0,0,0,0.16);
+    }
+
+    .option-btn.correct {
+      border-color: rgba(250, 204, 21, 0.95);
+      background: linear-gradient(180deg, rgba(34,197,94,0.96), rgba(21,128,61,0.96));
+      box-shadow: 0 10px 0 rgba(20, 83, 45, 0.9), 0 0 28px rgba(250,204,21,0.32);
+      animation: correctPulse 0.75s ease both;
+    }
+
+    .option-btn.wrong {
+      border-color: rgba(239, 68, 68, 0.95);
+      background: linear-gradient(180deg, rgba(239,68,68,0.96), rgba(153,27,27,0.96));
+      box-shadow: 0 10px 0 rgba(69, 10, 10, 0.9);
+      animation: wrongShake 0.36s ease both;
+    }
+
+    @keyframes correctPulse {
+      0% { transform: scale(1); }
+      45% { transform: scale(1.025); }
+      100% { transform: scale(1); }
+    }
+
+    @keyframes wrongShake {
+      0%, 100% { transform: translateX(0); }
+      20% { transform: translateX(-8px); }
+      40% { transform: translateX(8px); }
+      60% { transform: translateX(-5px); }
+      80% { transform: translateX(5px); }
+    }
+
+    .action-row {
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+      margin-top: 24px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .primary-btn,
+    .secondary-btn {
+      border: 0;
+      border-radius: 18px;
+      padding: 16px 22px;
+      min-height: 58px;
+      font-size: 20px;
+      font-weight: 950;
+      cursor: pointer;
+      transition: transform 0.16s ease, filter 0.16s ease;
+    }
+
+    .primary-btn {
+      background: linear-gradient(180deg, #fde047, #f59e0b);
+      color: #1f2937;
+      box-shadow: 0 9px 0 #92400e, 0 0 22px rgba(250,204,21,0.23);
+    }
+
+    .secondary-btn {
+      background: linear-gradient(180deg, #93c5fd, #38bdf8);
+      color: #0f172a;
+      box-shadow: 0 9px 0 #075985, 0 0 22px rgba(56,189,248,0.18);
+    }
+
+    .primary-btn:hover,
+    .secondary-btn:hover {
+      transform: translateY(-2px);
+      filter: brightness(1.04);
+    }
+
+    .primary-btn:active,
+    .secondary-btn:active {
+      transform: translateY(4px);
+      box-shadow: none;
+    }
+
+    .primary-btn[hidden],
+    .secondary-btn[hidden] {
+      display: none;
+    }
+
+    .explain-card {
+      padding: 20px;
+      position: sticky;
+      top: 16px;
+      min-height: 530px;
+    }
+
+    .detective-panel {
+      display: grid;
+      gap: 14px;
+    }
+
+    .detective-face {
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      display: grid;
+      place-items: center;
+      border-radius: 18px;
+      background:
+        linear-gradient(135deg, rgba(56,189,248,0.14), rgba(250,204,21,0.12)),
+        repeating-linear-gradient(45deg, rgba(255,255,255,0.06) 0 8px, transparent 8px 16px);
+      border: 2px solid rgba(255,255,255,0.12);
+      font-size: clamp(58px, 10vw, 94px);
+    }
+
+    .panel-title {
+      font-size: 24px;
+      font-weight: 950;
+      margin: 0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .hint-text {
+      color: var(--muted);
+      line-height: 1.68;
+      margin: 0;
+      font-size: 18px;
+    }
+
+    .answer-line {
+      display: none;
+      margin: 0;
+      padding: 14px;
+      border-radius: 16px;
+      border: 1px solid rgba(250, 204, 21, 0.35);
+      background: rgba(250, 204, 21, 0.12);
+      color: #fef3c7;
+      font-size: 18px;
+      line-height: 1.55;
+      font-weight: 800;
+    }
+
+    .answer-line.show {
+      display: block;
+    }
+
+    .explanation {
+      display: none;
+      margin: 0;
+      padding: 16px;
+      border-radius: 16px;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.12);
+      color: #e2e8f0;
+      font-size: 18px;
+      line-height: 1.7;
+    }
+
+    .explanation.show {
+      display: block;
+      animation: riseIn 0.28s ease both;
+    }
+
+    @keyframes riseIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 8px;
+    }
+
+    .info-chip {
+      padding: 8px 10px;
+      border-radius: 12px;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.1);
+      color: #e2e8f0;
+      font-weight: 800;
+      font-size: 14px;
+    }
+
+    .result-card {
+      display: none;
+      padding: clamp(22px, 5vw, 46px);
+      text-align: center;
+      min-height: 520px;
+      place-items: center;
+    }
+
+    .result-card.show {
+      display: grid;
+      animation: resultPop 0.45s ease both;
+    }
+
+    @keyframes resultPop {
+      from { opacity: 0; transform: scale(0.96); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    .result-emoji {
+      font-size: clamp(74px, 14vw, 130px);
+      margin-bottom: 10px;
+    }
+
+    .result-score {
+      font-size: clamp(46px, 9vw, 92px);
+      font-weight: 950;
+      margin: 0 0 8px;
+      color: #fde047;
+      text-shadow: 0 6px 0 rgba(0,0,0,0.24);
+    }
+
+    .result-comment {
+      margin: 0 auto 24px;
+      max-width: 760px;
+      color: #e2e8f0;
+      font-size: clamp(20px, 3vw, 30px);
+      line-height: 1.5;
+      font-weight: 900;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    .flash-correct {
+      animation: screenCorrect 0.55s ease both;
+    }
+
+    .flash-wrong {
+      animation: screenWrong 0.55s ease both;
+    }
+
+    @keyframes screenCorrect {
+      0%, 100% { filter: none; }
+      45% { filter: drop-shadow(0 0 18px rgba(34,197,94,0.5)); }
+    }
+
+    @keyframes screenWrong {
+      0%, 100% { filter: none; }
+      45% { filter: drop-shadow(0 0 18px rgba(239,68,68,0.5)); }
+    }
+
+    @media (max-width: 880px) {
+      .hero,
+      .layout {
+        grid-template-columns: 1fr;
+      }
+
+      .status-card {
+        width: 100%;
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .status-card .progress-shell {
+        grid-column: 1 / -1;
+      }
+
+      .explain-card {
+        position: static;
+        min-height: auto;
+      }
+
+      .quiz-card {
+        min-height: auto;
+      }
+    }
+
+    @media (max-width: 560px) {
+      .app {
+        width: min(100% - 18px, 1180px);
+        padding-top: 10px;
+      }
+
+      .title-card,
+      .status-card,
+      .quiz-card,
+      .explain-card,
+      .result-card {
+        border-radius: 18px;
+      }
+
+      .title-card {
+        padding: 18px;
+      }
+
+      .status-card {
+        padding: 16px;
+      }
+
+      .option-btn {
+        min-height: 68px;
+        padding: 12px;
+        gap: 10px;
+        border-radius: 16px;
+      }
+
+      .choice-letter {
+        width: 36px;
+        height: 36px;
+        border-radius: 12px;
+      }
+
+      .action-row {
+        flex-direction: column;
+      }
+
+      .primary-btn,
+      .secondary-btn {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="app" id="app">
+    <section class="hero">
+      <div class="title-card">
+        <div class="tag">🧩 數字 number 與文字 string</div>
+        <h1>Python Print 線索挑戰</h1>
+        <p class="subtitle">像素偵探進入 Python 實驗室，辨認 <span class="code-chip">print()</span>、數字、文字與引號。每次開局都會重新抽題與洗牌，抓作弊像抓苦力怕一樣敏銳。</p>
+      </div>
+
+      <aside class="status-card" aria-live="polite">
+        <div>
+          <div class="mini-label">目前題數</div>
+          <div class="big-number"><span id="currentNumber">1</span>/15</div>
+        </div>
+        <div>
+          <div class="mini-label">分數</div>
+          <div class="big-number"><span id="score">0</span></div>
+        </div>
+        <div class="progress-shell" aria-label="測驗進度">
+          <div class="progress-bar" id="progressBar"></div>
+        </div>
+      </aside>
+    </section>
+
+    <section class="layout" id="gameArea">
+      <article class="quiz-card" id="quizCard">
+        <div class="level-pill" id="levelPill">基礎線索</div>
+        <h2 class="question" id="questionText">題目載入中...</h2>
+        <div class="options" id="options"></div>
+        <div class="action-row">
+          <button class="primary-btn" id="nextBtn" hidden>下一題</button>
+        </div>
+      </article>
+
+      <aside class="explain-card">
+        <div class="detective-panel">
+          <div class="detective-face" id="detectiveFace">🕵️‍♂️</div>
+          <h3 class="panel-title">🔎 解答說明與線索</h3>
+          <p class="hint-text" id="hintText">選擇答案後，這裡會顯示正確選項位置與觀念提示。</p>
+          <p class="answer-line" id="answerLine"></p>
+          <p class="explanation" id="explanation"></p>
+          <div class="chips">
+            <span class="info-chip">每題 10 分</span>
+            <span class="info-chip">選項自動洗牌</span>
+            <span class="info-chip">答完才可下一題</span>
+          </div>
+        </div>
+      </aside>
+    </section>
+
+    <section class="result-card" id="resultCard">
+      <div>
+        <div class="result-emoji" id="resultEmoji">🏆</div>
+        <h2 class="result-score"><span id="finalScore">0</span>/150</h2>
+        <p class="result-comment" id="resultComment"></p>
+        <button class="secondary-btn" id="restartBtn">重新挑戰</button>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    /**********************************************************************
+     * 題庫資料區
+     * 若要更換題目，只需修改此處陣列。
+     * 出題者請把正確答案固定放在 o 陣列第 0 個位置，並將 a 設為 0。
+     * 網頁執行時會自動洗牌選項，正確答案判斷仍會保持正確。
+     **********************************************************************/
+
+    const easyQuestions = [
+      {
+        q: "在 Python 中，哪一個指令可以把內容顯示在畫面上？",
+        o: ["print()", "show()", "speak()"],
+        a: 0,
+        e: "Python 使用 print() 將內容輸出到畫面。它常用來顯示文字、數字、變數或運算結果。"
+      },
+      {
+        q: "哪一個寫法可以正確印出文字 Hello？",
+        o: ["print(\"Hello\")", "print(Hello)", "print[\"Hello\"]"],
+        a: 0,
+        e: "文字 string 需要使用引號包起來，所以 print(\"Hello\") 是正確寫法。"
+      },
+      {
+        q: "在 Python 中，文字資料通常稱為什麼？",
+        o: ["string", "number", "button"],
+        a: 0,
+        e: "文字資料稱為 string，常見縮寫是 str。只要是文字內容，通常需要放在引號裡。"
+      },
+      {
+        q: "在 Python 中，數字 123 屬於哪一類資料？",
+        o: ["number", "string", "color"],
+        a: 0,
+        e: "123 沒有加引號時，是數字資料，可以用來做數學運算。"
+      },
+      {
+        q: "哪一個是文字 string？",
+        o: ["\"123\"", "123", "1 + 2"],
+        a: 0,
+        e: "只要被引號包住，就會被 Python 當成文字 string，即使內容看起來像數字。"
+      },
+      {
+        q: "哪一個是數字 number？",
+        o: ["456", "\"456\"", "\"hello\""],
+        a: 0,
+        e: "456 沒有引號，因此是數字。\"456\" 有引號，因此是文字。"
+      },
+      {
+        q: "print(3 + 2) 會顯示什麼？",
+        o: ["5", "3 + 2", "32"],
+        a: 0,
+        e: "3 + 2 是數字運算，Python 會先算出結果，再用 print 顯示 5。"
+      },
+      {
+        q: "print(\"3 + 2\") 會顯示什麼？",
+        o: ["3 + 2", "5", "32"],
+        a: 0,
+        e: "引號裡的內容會被視為文字，所以 Python 會原樣印出 3 + 2，而不會計算。"
+      },
+      {
+        q: "哪一個符號常用來包住文字？",
+        o: ["引號", "括號", "逗號"],
+        a: 0,
+        e: "文字 string 需要用單引號或雙引號包住，例如 'Hi' 或 \"Hi\"。"
+      },
+      {
+        q: "print(\"Cat\") 的輸出結果是什麼？",
+        o: ["Cat", "\"Cat\"", "print Cat"],
+        a: 0,
+        e: "print 會顯示引號中的文字內容，但輸出時通常不會把外面的引號印出來。"
+      },
+      {
+        q: "哪一個寫法可以正確印出數字 88？",
+        o: ["print(88)", "print 88", "print[88]"],
+        a: 0,
+        e: "Python 3 使用 print()，要輸出的內容放在小括號裡。"
+      },
+      {
+        q: "下列哪個是正確的 print 寫法？",
+        o: ["print(\"Python\")", "print \"Python\"", "print{\"Python\"}"],
+        a: 0,
+        e: "Python 3 的 print 是函式，必須使用小括號。"
+      },
+      {
+        q: "print(10 * 2) 會顯示什麼？",
+        o: ["20", "10 * 2", "102"],
+        a: 0,
+        e: "星號 * 在 Python 中代表乘法，因此 10 * 2 的結果是 20。"
+      },
+      {
+        q: "print(\"10 * 2\") 會顯示什麼？",
+        o: ["10 * 2", "20", "100"],
+        a: 0,
+        e: "因為 10 * 2 被引號包住，所以它是文字，不會被當成數學算式計算。"
+      },
+      {
+        q: "print(7) 中的 7 是什麼資料？",
+        o: ["數字 number", "文字 string", "函式 function"],
+        a: 0,
+        e: "7 沒有引號，所以是數字 number。"
+      },
+      {
+        q: "print(\"7\") 中的 \"7\" 是什麼資料？",
+        o: ["文字 string", "數字 number", "變數 variable"],
+        a: 0,
+        e: "\"7\" 被引號包住，因此是文字 string。它看起來像數字，但本質是文字。"
+      },
+      {
+        q: "哪一個可以印出 I love Python？",
+        o: ["print(\"I love Python\")", "print(I love Python)", "print:I love Python"],
+        a: 0,
+        e: "包含空格的文字也要用引號包起來，才能讓 Python 知道這是一段文字。"
+      },
+      {
+        q: "print() 裡面的內容放在哪一種括號中？",
+        o: ["小括號 ()", "中括號 []", "大括號 {}"],
+        a: 0,
+        e: "print 是函式，內容要放在小括號 () 裡。"
+      },
+      {
+        q: "哪一個會進行數學加法？",
+        o: ["print(1 + 1)", "print(\"1 + 1\")", "print(\"one + one\")"],
+        a: 0,
+        e: "沒有引號的 1 + 1 是數學運算，會得到 2。"
+      },
+      {
+        q: "哪一個會原樣印出文字 1 + 1？",
+        o: ["print(\"1 + 1\")", "print(1 + 1)", "print(1) + print(1)"],
+        a: 0,
+        e: "引號會把內容變成文字，所以 print(\"1 + 1\") 會原樣印出 1 + 1。"
+      },
+      {
+        q: "下列哪個不是文字 string？",
+        o: ["99", "\"apple\"", "\"99\""],
+        a: 0,
+        e: "99 沒有引號，是數字。\"apple\" 和 \"99\" 都有引號，是文字。"
+      },
+      {
+        q: "下列哪個不是數字 number？",
+        o: ["\"20\"", "20", "3.14"],
+        a: 0,
+        e: "\"20\" 有引號，所以是文字，不是數字。20 和 3.14 都可以是數字。"
+      },
+      {
+        q: "print(\"Hi\") 裡的 Hi 為什麼要加引號？",
+        o: ["讓 Python 知道 Hi 是文字", "讓 Python 自動加法", "讓 Python 關閉程式"],
+        a: 0,
+        e: "未定義的文字如果沒有引號，Python 可能會把它當成變數名稱，造成錯誤。"
+      },
+      {
+        q: "哪一個輸出會是 12？",
+        o: ["print(6 + 6)", "print(\"6 + 6\")", "print(\"12\" + 0)"],
+        a: 0,
+        e: "6 + 6 是數字加法，所以結果是 12。"
+      },
+      {
+        q: "print(\"A\") 會印出什麼？",
+        o: ["A", "\"A\"", "print(A)"],
+        a: 0,
+        e: "print 會把字串內容顯示出來，不會顯示包住文字用的外層引號。"
+      },
+      {
+        q: "哪一個是雙引號包住的字串？",
+        o: ["\"Python\"", "'Python'", "Python"],
+        a: 0,
+        e: "\"Python\" 使用雙引號。'Python' 也是字串，但它使用單引號。"
+      },
+      {
+        q: "哪一個是單引號包住的字串？",
+        o: ["'Dog'", "\"Dog\"", "Dog"],
+        a: 0,
+        e: "'Dog' 使用單引號，也是合法的 Python 字串。"
+      },
+      {
+        q: "print(2 ** 3) 會顯示什麼？",
+        o: ["8", "6", "2 ** 3"],
+        a: 0,
+        e: "** 在 Python 中代表次方，2 ** 3 是 2 的 3 次方，所以是 8。"
+      },
+      {
+        q: "print(\"2 ** 3\") 會顯示什麼？",
+        o: ["2 ** 3", "8", "6"],
+        a: 0,
+        e: "被引號包住的內容是文字，Python 不會把它當成次方運算。"
+      },
+      {
+        q: "哪一個選項最適合描述 print？",
+        o: ["顯示輸出內容", "刪除檔案", "建立圖片"],
+        a: 0,
+        e: "print 的主要功能是顯示輸出內容，常用於觀察程式執行結果。"
+      },
+      {
+        q: "print(100 / 4) 會顯示什麼？",
+        o: ["25.0", "25", "100 / 4"],
+        a: 0,
+        e: "在 Python 中，/ 是除法，結果通常會以浮點數顯示，所以是 25.0。"
+      },
+      {
+        q: "print(100 // 4) 會顯示什麼？",
+        o: ["25", "25.0", "100 // 4"],
+        a: 0,
+        e: "// 是整數除法，會得到整數商，所以 100 // 4 的結果是 25。"
+      },
+      {
+        q: "哪一個會印出文字 Minecraft？",
+        o: ["print(\"Minecraft\")", "print(Minecraft)", "print = Minecraft"],
+        a: 0,
+        e: "Minecraft 是文字時需要加引號，否則 Python 會以為 Minecraft 是變數名稱。"
+      },
+      {
+        q: "哪一個寫法的括號完整且正確？",
+        o: ["print(\"Score\")", "print(\"Score\"", "print\"Score\")"],
+        a: 0,
+        e: "print(\"Score\") 同時有函式小括號與文字引號，結構完整。"
+      },
+      {
+        q: "想把數字 9 顯示在畫面上，哪一個最直接？",
+        o: ["print(9)", "print(\"nine\")", "show(9)"],
+        a: 0,
+        e: "print(9) 會直接輸出數字 9。print(\"nine\") 會輸出英文文字 nine。"
+      }
+    ];
+
+    const hardQuestions = [
+      {
+        q: "print(\"3\" + \"4\") 會顯示什麼？",
+        o: ["34", "7", "\"34\""],
+        a: 0,
+        e: "兩個字串使用 + 會做字串串接，所以 \"3\" + \"4\" 的結果是文字 34。"
+      },
+      {
+        q: "print(3 + 4) 和 print(\"3\" + \"4\") 最大差別是什麼？",
+        o: ["前者是數字加法，後者是文字串接", "兩者都會得到 7", "兩者都會得到 34"],
+        a: 0,
+        e: "沒有引號的 3 和 4 是數字，會加總成 7。有引號的 \"3\" 和 \"4\" 是文字，會串接成 34。"
+      },
+      {
+        q: "print(\"Hi\" + \"Python\") 會顯示什麼？",
+        o: ["HiPython", "Hi Python", "Hi+Python"],
+        a: 0,
+        e: "字串相加會直接接在一起，不會自動加入空格。若要空格，需要寫成 \"Hi \" + \"Python\"。"
+      },
+      {
+        q: "print(\"Hi \" + \"Python\") 會顯示什麼？",
+        o: ["Hi Python", "HiPython", "Hi  Python"],
+        a: 0,
+        e: "第一段字串 Hi 後面已經包含一個空格，所以串接後會得到 Hi Python。"
+      },
+      {
+        q: "print(\"Score:\", 100) 會顯示什麼概念？",
+        o: ["用逗號同時輸出文字與數字", "把 Score 和 100 相加", "把 100 變成錯誤"],
+        a: 0,
+        e: "print 可以用逗號分隔多個輸出項目，Python 會在項目之間加入空格。"
+      },
+      {
+        q: "print(\"Score:\" + 100) 通常會發生什麼？",
+        o: ["錯誤，因為字串不能直接加數字", "顯示 Score:100", "顯示 100Score:"],
+        a: 0,
+        e: "字串和數字不能直接用 + 相加。若要串接，需要先把數字轉成字串，例如 str(100)。"
+      },
+      {
+        q: "print(\"Score:\" + str(100)) 會顯示什麼？",
+        o: ["Score:100", "Score: 100", "錯誤"],
+        a: 0,
+        e: "str(100) 會把數字 100 轉成文字，再和 \"Score:\" 串接，所以結果是 Score:100。"
+      },
+      {
+        q: "哪一個寫法最適合同時顯示文字與數字，且不需要 str()？",
+        o: ["print(\"Score:\", 100)", "print(\"Score:\" + 100)", "print(Score: 100)"],
+        a: 0,
+        e: "用逗號可以讓 print 同時輸出不同型別的資料，不必先把數字轉成字串。"
+      },
+      {
+        q: "print(type(\"123\")) 主要可以看出什麼？",
+        o: ["\"123\" 是字串型別", "\"123\" 是整數型別", "\"123\" 會自動變成加法"],
+        a: 0,
+        e: "type() 可以查看資料型別。\"123\" 有引號，因此型別是字串 str。"
+      },
+      {
+        q: "print(type(123)) 主要可以看出什麼？",
+        o: ["123 是整數型別", "123 是字串型別", "123 是按鈕型別"],
+        a: 0,
+        e: "123 沒有小數點且沒有引號，在 Python 中通常是整數 int。"
+      },
+      {
+        q: "print(\"A\" * 3) 會顯示什麼？",
+        o: ["AAA", "A3", "錯誤"],
+        a: 0,
+        e: "字串乘上一個整數，代表重複該字串，因此 \"A\" * 3 會得到 AAA。"
+      },
+      {
+        q: "print(\"2\" * 3) 會顯示什麼？",
+        o: ["222", "6", "錯誤"],
+        a: 0,
+        e: "\"2\" 是字串，不是數字。字串乘以 3 代表重複三次，所以得到 222。"
+      },
+      {
+        q: "print(2 * 3) 與 print(\"2\" * 3) 的差別是什麼？",
+        o: ["前者是乘法得 6，後者是字串重複得 222", "兩者都得到 6", "兩者都得到 222"],
+        a: 0,
+        e: "2 是數字，可以乘法運算；\"2\" 是字串，乘以整數代表重複字串。"
+      },
+      {
+        q: "print(f\"Score: {100}\") 會顯示什麼？",
+        o: ["Score: 100", "Score: {100}", "錯誤"],
+        a: 0,
+        e: "f-string 可以把大括號中的值放入字串，常用來格式化輸出。"
+      },
+      {
+        q: "哪一個最能說明 print() 的偵錯用途？",
+        o: ["在程式不同位置印出資料，觀察變化", "讓程式自動變漂亮", "把所有錯誤直接刪除"],
+        a: 0,
+        e: "print 常用於偵錯，透過輸出變數或訊息，確認程式執行到哪裡、資料是否正確。"
+      }
+    ];
+
+    const TOTAL_EASY = 10;
+    const TOTAL_HARD = 5;
+    const POINTS_PER_QUESTION = 10;
+
+    let quizQuestions = [];
+    let currentIndex = 0;
+    let score = 0;
+    let answered = false;
+    let currentShuffledOptions = [];
+
+    const app = document.getElementById("app");
+    const gameArea = document.getElementById("gameArea");
+    const resultCard = document.getElementById("resultCard");
+    const questionText = document.getElementById("questionText");
+    const optionsEl = document.getElementById("options");
+    const nextBtn = document.getElementById("nextBtn");
+    const restartBtn = document.getElementById("restartBtn");
+    const scoreEl = document.getElementById("score");
+    const currentNumberEl = document.getElementById("currentNumber");
+    const progressBar = document.getElementById("progressBar");
+    const levelPill = document.getElementById("levelPill");
+    const answerLine = document.getElementById("answerLine");
+    const explanation = document.getElementById("explanation");
+    const hintText = document.getElementById("hintText");
+    const detectiveFace = document.getElementById("detectiveFace");
+    const finalScore = document.getElementById("finalScore");
+    const resultComment = document.getElementById("resultComment");
+    const resultEmoji = document.getElementById("resultEmoji");
+
+    function shuffleArray(array) {
+      const copy = [...array];
+      for (let i = copy.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [copy[i], copy[j]] = [copy[j], copy[i]];
+      }
+      return copy;
+    }
+
+    function sampleQuestions(questionBank, amount) {
+      return shuffleArray(questionBank).slice(0, amount);
+    }
+
+    function buildQuiz() {
+      const selectedEasy = sampleQuestions(easyQuestions, TOTAL_EASY);
+      const selectedHard = sampleQuestions(hardQuestions, TOTAL_HARD);
+      quizQuestions = [...selectedEasy, ...selectedHard];
+    }
+
+    function escapeHtml(text) {
+      return String(text)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    function decorateCode(text) {
+      const escaped = escapeHtml(text);
+      return escaped.replace(/(print\([^)]*\)|type\([^)]*\)|str\([^)]*\)|f&quot;[^&]*&quot;|&quot;[^&]*&quot;|'[^']*'|\bstring\b|\bnumber\b|\bint\b|\bstr\b)/g, '<span class="code-chip">$1</span>');
+    }
+
+    function renderQuestion() {
+      answered = false;
+      nextBtn.hidden = true;
+      answerLine.classList.remove("show");
+      explanation.classList.remove("show");
+      answerLine.textContent = "";
+      explanation.textContent = "";
+      hintText.textContent = "選擇答案後，這裡會顯示正確選項位置與觀念提示。";
+      detectiveFace.textContent = currentIndex < TOTAL_EASY ? "🕵️‍♂️" : "🧪";
+
+      const question = quizQuestions[currentIndex];
+      const isHard = currentIndex >= TOTAL_EASY;
+      levelPill.textContent = isHard ? "進階挑戰" : "基礎線索";
+      levelPill.style.background = isHard ? "rgba(239, 68, 68, 0.15)" : "rgba(250, 204, 21, 0.15)";
+      levelPill.style.color = isHard ? "#fecaca" : "#fde68a";
+
+      questionText.innerHTML = decorateCode(question.q);
+      currentNumberEl.textContent = String(currentIndex + 1);
+      scoreEl.textContent = String(score);
+      progressBar.style.width = `${(currentIndex / quizQuestions.length) * 100}%`;
+
+      currentShuffledOptions = shuffleArray(
+        question.o.map((text, originalIndex) => ({ text, originalIndex }))
+      );
+
+      optionsEl.innerHTML = "";
+      currentShuffledOptions.forEach((option, shuffledIndex) => {
+        const button = document.createElement("button");
+        button.className = "option-btn";
+        button.type = "button";
+        button.dataset.originalIndex = String(option.originalIndex);
+        button.dataset.shuffledIndex = String(shuffledIndex);
+        button.innerHTML = `
+          <span class="choice-letter">${String.fromCharCode(65 + shuffledIndex)}</span>
+          <span>${decorateCode(option.text)}</span>
+        `;
+        button.addEventListener("click", () => handleAnswer(button));
+        optionsEl.appendChild(button);
+      });
+    }
+
+    function handleAnswer(selectedButton) {
+      if (answered) return;
+      answered = true;
+
+      const question = quizQuestions[currentIndex];
+      const selectedOriginalIndex = Number(selectedButton.dataset.originalIndex);
+      const correctOriginalIndex = question.a;
+      const correctShuffledIndex = currentShuffledOptions.findIndex(option => option.originalIndex === correctOriginalIndex);
+      const correctLetter = String.fromCharCode(65 + correctShuffledIndex);
+      const correctText = currentShuffledOptions[correctShuffledIndex].text;
+      const isCorrect = selectedOriginalIndex === correctOriginalIndex;
+
+      document.querySelectorAll(".option-btn").forEach(button => {
+        button.disabled = true;
+        const buttonOriginalIndex = Number(button.dataset.originalIndex);
+        if (buttonOriginalIndex === correctOriginalIndex) {
+          button.classList.add("correct");
+        }
+      });
+
+      if (!isCorrect) {
+        selectedButton.classList.add("wrong");
+      }
+
+      if (isCorrect) {
+        score += POINTS_PER_QUESTION;
+        scoreEl.textContent = String(score);
+        detectiveFace.textContent = "🎯";
+        app.classList.remove("flash-wrong");
+        app.classList.add("flash-correct");
+      } else {
+        detectiveFace.textContent = "🧯";
+        app.classList.remove("flash-correct");
+        app.classList.add("flash-wrong");
+      }
+
+      setTimeout(() => {
+        app.classList.remove("flash-correct", "flash-wrong");
+      }, 620);
+
+      hintText.textContent = isCorrect ? "答對！線索已鎖定，Python 偵探筆記 +1。" : "答錯也沒關係，真正的偵探會回收線索再推理一次。";
+      answerLine.innerHTML = `正確答案是 <strong>${correctLetter}</strong>：<span class="code-chip">${escapeHtml(correctText)}</span>`;
+      explanation.textContent = question.e;
+      answerLine.classList.add("show");
+      explanation.classList.add("show");
+
+      nextBtn.textContent = currentIndex === quizQuestions.length - 1 ? "查看結算" : (currentIndex + 1 === TOTAL_EASY ? "下一個挑戰" : "下一題");
+      nextBtn.hidden = false;
+    }
+
+    function nextQuestion() {
+      if (!answered) return;
+      if (currentIndex < quizQuestions.length - 1) {
+        currentIndex++;
+        renderQuestion();
+      } else {
+        showResult();
+      }
+    }
+
+    function getComment(totalScore) {
+      if (totalScore >= 130) {
+        return {
+          emoji: "🏆",
+          text: "完美破案！你已經掌握大部分觀念。"
+        };
+      }
+      if (totalScore >= 90) {
+        return {
+          emoji: "🧠",
+          text: "表現不錯！再複習幾個觀念，就能更穩。"
+        };
+      }
+      return {
+        emoji: "🔎",
+        text: "線索還有點混亂，重新挑戰一次，下一輪就能抓到關鍵重點。"
+      };
+    }
+
+    function showResult() {
+      gameArea.classList.add("hidden");
+      resultCard.classList.add("show");
+      progressBar.style.width = "100%";
+      currentNumberEl.textContent = "15";
+      finalScore.textContent = String(score);
+      const result = getComment(score);
+      resultEmoji.textContent = result.emoji;
+      resultComment.textContent = result.text;
+    }
+
+    function restartQuiz() {
+      currentIndex = 0;
+      score = 0;
+      answered = false;
+      buildQuiz();
+      resultCard.classList.remove("show");
+      gameArea.classList.remove("hidden");
+      renderQuestion();
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    nextBtn.addEventListener("click", nextQuestion);
+    restartBtn.addEventListener("click", restartQuiz);
+
+    buildQuiz();
+    renderQuestion();
+  </script>
+</body>
+</html>
